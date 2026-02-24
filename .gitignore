@@ -233,8 +233,14 @@ temp_audio/
 # Output Files
 *.txt
 output/
+outputs/
 transcripts/
 diarization_results/
+
+# Sample output (committed as examples for README)
+!sample_output/
+!sample_output/**
+!sample_interview.mp4
 
 # Model Cache Files
 models/

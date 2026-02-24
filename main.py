@@ -102,6 +102,16 @@ Examples:
             '(e.g. "I\'m John", "my name is Sarah") and replace SPEAKER_N labels.'
         ),
     )
+    parser.add_argument(
+        "--emotions",
+        action="store_true",
+        help=(
+            "Experimental: run dual-model speech emotion analysis on every segment. "
+            "Produces arousal / valence / dominance (from vocal tone) and categorical "
+            "emotions (from text content) in a separate *_emotions.txt file. "
+            "Ideal for HCD interview analysis."
+        ),
+    )
 
     return parser
 

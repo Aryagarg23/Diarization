@@ -1,0 +1,274 @@
+================================================================================
+EMOTION-ANNOTATED TRANSCRIPT
+================================================================================
+
+Models:
+  Audio: audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim
+    Arousal  (0-1): activation / excitement
+    Dominance(0-1): control / confidence
+    Valence  (0-1): positivity / pleasantness
+
+  Text:  j-hartmann/emotion-english-distilroberta-base
+    anger | disgust | fear | joy | neutral | sadness | surprise
+
+================================================================================
+
+[00:03.27 -> 00:03.85] Mrs:
+  Good afternoon.
+  Voice:  arousal=0.74  valence=0.84  dominance=0.71
+  Text:   neutral=0.69  joy=0.27  sadness=0.01
+
+[00:03.89 -> 00:04.71] Mrs:
+  You must be Mr. Wang.
+  Voice:  arousal=0.60  valence=0.45  dominance=0.61
+  Text:   neutral=0.89  surprise=0.07  sadness=0.01
+
+[00:05.33 -> 00:06.13] SPEAKER_2:
+  Yes, good afternoon.
+  Voice:  arousal=0.66  valence=0.86  dominance=0.71
+  Text:   joy=0.68  neutral=0.29  sadness=0.02
+
+[00:06.16 -> 00:06.84] Mrs:
+  Pleased to meet you.
+  Voice:  arousal=0.66  valence=0.76  dominance=0.66
+  Text:   joy=0.75  sadness=0.17  neutral=0.05
+
+[00:06.92 -> 00:08.20] Mrs:
+  I'm Mrs. Clark, the bank manager.
+  Voice:  arousal=0.57  valence=0.59  dominance=0.62
+  Text:   neutral=0.73  surprise=0.18  sadness=0.03
+
+[00:08.54 -> 00:09.28] Mrs:
+  Please have a seat.
+  Voice:  arousal=0.64  valence=0.49  dominance=0.65
+  Text:   neutral=0.82  sadness=0.06  disgust=0.06
+
+[00:09.50 -> 00:09.82] SPEAKER_2:
+  Thank you.
+  Voice:  arousal=0.65  valence=0.84  dominance=0.71
+  Text:   neutral=0.67  joy=0.21  surprise=0.08
+
+[00:12.48 -> 00:14.89] Mrs:
+  So tell me a little bit about yourself, Mr. Wang.
+  Voice:  arousal=0.44  valence=0.59  dominance=0.51
+  Text:   neutral=0.96  disgust=0.01  surprise=0.01
+
+[00:15.25 -> 00:17.17] SPEAKER_2:
+  Well, I grew up in China and studied accounting.
+  Voice:  arousal=0.40  valence=0.68  dominance=0.49
+  Text:   neutral=0.78  sadness=0.07  disgust=0.05
+
+[00:17.83 -> 00:21.22] SPEAKER_2:
+  Then I worked at an accounting firm there for two years before coming to the States.
+  Voice:  arousal=0.29  valence=0.52  dominance=0.42
+  Text:   joy=0.39  fear=0.35  neutral=0.13
+
+[00:22.06 -> 00:26.07] SPEAKER_2:
+  I work well with others, and I like to challenge myself to constantly improve my skills.
+  Voice:  arousal=0.40  valence=0.65  dominance=0.50
+  Text:   joy=0.95  neutral=0.02  disgust=0.01
+
+[00:27.05 -> 00:27.69] Mrs:
+  That's great.
+  Voice:  arousal=0.62  valence=1.00  dominance=0.70
+  Text:   joy=0.93  neutral=0.05  surprise=0.01
+
+[00:28.53 -> 00:30.93] Mrs:
+  As you know, this job is for a bank teller.
+  Voice:  arousal=0.46  valence=0.34  dominance=0.55
+  Text:   neutral=0.89  surprise=0.04  disgust=0.02
+
+[00:31.54 -> 00:35.84] Mrs:
+  What would you say are some of your strengths or skills that might help you succeed in this job?
+  Voice:  arousal=0.48  valence=0.54  dominance=0.58
+  Text:   neutral=0.88  surprise=0.07  anger=0.02
+
+[00:36.74 -> 00:38.69] SPEAKER_2:
+  My biggest strength is my attention to detail.
+  Voice:  arousal=0.48  valence=0.70  dominance=0.58
+  Text:   neutral=0.64  joy=0.25  disgust=0.04
+
+[00:39.81 -> 00:41.39] SPEAKER_2:
+  That has helped me a lot in this line of work.
+  Voice:  arousal=0.37  valence=0.64  dominance=0.47
+  Text:   joy=0.89  neutral=0.09  sadness=0.01
+
+[00:42.39 -> 00:43.99] SPEAKER_2:
+  Also, I work well under pressure.
+  Voice:  arousal=0.32  valence=0.61  dominance=0.42
+  Text:   joy=0.53  neutral=0.37  fear=0.04
+
+[00:44.83 -> 00:45.20] Mrs:
+  Wonderful.
+  Voice:  arousal=0.61  valence=1.00  dominance=0.69
+  Text:   surprise=0.55  joy=0.32  neutral=0.07
+
+[00:46.10 -> 00:48.06] Mrs:
+  And what would you say are some of your weaknesses?
+  Voice:  arousal=0.45  valence=0.31  dominance=0.53
+  Text:   neutral=0.87  surprise=0.06  disgust=0.02
+
+[00:49.62 -> 00:52.16] SPEAKER_2:
+  One of my biggest weaknesses is asking for help when I need it.
+  Voice:  arousal=0.32  valence=0.49  dominance=0.44
+  Text:   neutral=0.46  sadness=0.31  disgust=0.09
+
+[00:53.33 -> 00:54.31] SPEAKER_2:
+  I'd like to do better at that.
+  Voice:  arousal=0.41  valence=0.73  dominance=0.50
+  Text:   sadness=0.51  neutral=0.29  disgust=0.08
+
+[00:55.83 -> 00:57.57] Mrs:
+  I appreciate your honesty, Mr. Wayne.
+  Voice:  arousal=0.44  valence=0.78  dominance=0.59
+  Text:   joy=0.80  neutral=0.15  disgust=0.02
+
+[00:58.47 -> 01:01.48] Mrs:
+  What can you tell me about some of your goals over the next few years?
+  Voice:  arousal=0.49  valence=0.49  dominance=0.58
+  Text:   neutral=0.90  surprise=0.06  anger=0.01
+
+[01:01.79 -> 01:06.70] SPEAKER_2:
+  My primary goal is to gain more work experience, so a position like this would help me meet that goal.
+  Voice:  arousal=0.32  valence=0.63  dominance=0.44
+  Text:   joy=0.76  neutral=0.20  surprise=0.01
+
+[01:07.60 -> 01:10.40] SPEAKER_2:
+  I'd also like to learn more about the different aspects of banking.
+  Voice:  arousal=0.29  valence=0.64  dominance=0.41
+  Text:   neutral=0.70  joy=0.21  sadness=0.04
+
+[01:10.90 -> 01:12.81] Mrs:
+  I think those goals are very smart.
+  Voice:  arousal=0.52  valence=0.64  dominance=0.59
+  Text:   neutral=0.84  joy=0.12  surprise=0.02
+
+[01:13.65 -> 01:16.99] Mrs:
+  I also want to ask you what salary range you'd be most comfortable with.
+  Voice:  arousal=0.50  valence=0.62  dominance=0.59
+  Text:   neutral=0.96  surprise=0.01  disgust=0.01
+
+[01:17.43 -> 01:25.38] SPEAKER_2:
+  I would be hoping to start somewhere between $35,000 and $38,000 a year, which is based on my experience and education.
+  Voice:  arousal=0.29  valence=0.55  dominance=0.42
+  Text:   neutral=0.90  joy=0.04  surprise=0.04
+
+[01:26.24 -> 01:26.60] Mrs:
+  Thank you.
+  Voice:  arousal=0.66  valence=0.89  dominance=0.70
+  Text:   neutral=0.67  joy=0.21  surprise=0.08
+
+[01:27.38 -> 01:29.03] Mrs:
+  Those are all the questions I have for you today.
+  Voice:  arousal=0.50  valence=0.59  dominance=0.57
+  Text:   neutral=0.96  surprise=0.02  anger=0.01
+
+[01:29.07 -> 01:31.11] Mrs:
+  Do you have any questions for me?
+  Voice:  arousal=0.40  valence=0.31  dominance=0.48
+  Text:   neutral=0.79  surprise=0.06  anger=0.06
+
+[01:31.81 -> 01:33.24] SPEAKER_2:
+  Can you tell me about the working hours?
+  Voice:  arousal=0.42  valence=0.51  dominance=0.49
+  Text:   neutral=0.69  surprise=0.23  sadness=0.03
+
+[01:33.90 -> 01:37.26] Mrs:
+  We'd like whoever fills the position to work nine to five each weekday.
+  Voice:  arousal=0.53  valence=0.58  dominance=0.61
+  Text:   neutral=0.89  joy=0.04  disgust=0.02
+
+[01:37.88 -> 01:39.50] Mrs:
+  There may be some occasional overtime.
+  Voice:  arousal=0.42  valence=0.46  dominance=0.51
+  Text:   neutral=0.93  surprise=0.04  sadness=0.01
+
+[01:40.04 -> 01:40.32] SPEAKER_2:
+  All right.
+  Voice:  arousal=0.51  valence=0.57  dominance=0.47
+  Text:   neutral=0.68  anger=0.18  disgust=0.08
+
+[01:41.00 -> 01:41.32] SPEAKER_2:
+  Thank you.
+  Voice:  arousal=0.55  valence=0.93  dominance=0.64
+  Text:   neutral=0.67  joy=0.21  surprise=0.08
+
+[01:42.20 -> 01:44.23] SPEAKER_2:
+  And when do you expect to be making your decision?
+  Voice:  arousal=0.32  valence=0.43  dominance=0.44
+  Text:   neutral=0.77  surprise=0.15  anger=0.05
+
+[01:44.93 -> 01:47.37] Mrs:
+  We'll give you a call within a week and let you know.
+  Voice:  arousal=0.47  valence=0.59  dominance=0.54
+  Text:   neutral=0.95  joy=0.01  surprise=0.01
+
+[01:47.87 -> 01:48.91] Mrs:
+  Do you have any other questions?
+  Voice:  arousal=0.44  valence=0.47  dominance=0.51
+  Text:   neutral=0.88  surprise=0.06  disgust=0.02
+
+[01:49.57 -> 01:50.13] SPEAKER_2:
+  Not at the moment.
+  Voice:  arousal=0.41  valence=0.36  dominance=0.48
+  Text:   neutral=0.90  sadness=0.02  disgust=0.02
+
+[01:50.75 -> 01:51.06] SPEAKER_2:
+  Thank you.
+  Voice:  arousal=0.55  valence=0.80  dominance=0.64
+  Text:   neutral=0.67  joy=0.21  surprise=0.08
+
+[01:51.42 -> 01:54.06] Mrs:
+  Well, if you think of any more, you're always welcome to call me.
+  Voice:  arousal=0.52  valence=0.74  dominance=0.59
+  Text:   neutral=0.77  joy=0.17  anger=0.01
+
+[01:54.52 -> 01:55.12] SPEAKER_2:
+  Thank you so much.
+  Voice:  arousal=0.49  valence=0.71  dominance=0.56
+  Text:   joy=0.70  neutral=0.21  surprise=0.07
+
+[01:55.60 -> 01:56.58] Mrs:
+  It was great to meet you.
+  Voice:  arousal=0.60  valence=1.00  dominance=0.68
+  Text:   joy=0.98  surprise=0.01  neutral=0.01
+
+[01:57.26 -> 01:58.30] Mrs:
+  Thanks for coming in today.
+  Voice:  arousal=0.58  valence=0.74  dominance=0.64
+  Text:   joy=0.47  neutral=0.37  surprise=0.14
+
+[01:58.52 -> 01:58.82] SPEAKER_2:
+  Thank you.
+  Voice:  arousal=0.57  valence=0.83  dominance=0.65
+  Text:   neutral=0.67  joy=0.21  surprise=0.08
+
+[01:59.26 -> 02:00.50] SPEAKER_2:
+  It was a pleasure meeting you as well.
+  Voice:  arousal=0.45  valence=0.80  dominance=0.55
+  Text:   joy=0.99  neutral=0.00  surprise=0.00
+
+[02:08.06 -> 02:09.79] UNKNOWN:
+  you
+  Voice:  arousal=0.45  valence=0.43  dominance=0.41
+  Text:   neutral=0.90  anger=0.04  surprise=0.02
+
+================================================================================
+SPEAKER EMOTION PROFILES (averaged across all segments)
+================================================================================
+
+Mrs (25 segments):
+  Voice avg:  arousal=0.53  valence=0.63  dominance=0.60
+  Text avg:   neutral=0.68  joy=0.21  surprise=0.06  sadness=0.02  disgust=0.01  anger=0.01  fear=0.01
+  Dominant:   neutral (0.68)
+
+SPEAKER_2 (22 segments):
+  Voice avg:  arousal=0.43  valence=0.66  dominance=0.52
+  Text avg:   neutral=0.49  joy=0.33  sadness=0.05  surprise=0.04  anger=0.03  fear=0.03  disgust=0.03
+  Dominant:   neutral (0.49)
+
+UNKNOWN (1 segments):
+  Voice avg:  arousal=0.45  valence=0.43  dominance=0.41
+  Text avg:   neutral=0.90  anger=0.04  surprise=0.02  sadness=0.02  disgust=0.01  joy=0.01  fear=0.00
+  Dominant:   neutral (0.90)
+

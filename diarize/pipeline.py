@@ -14,7 +14,9 @@ from diarize.audio import extract_audio
 from diarize.transcribe import transcribe_audio, align_timestamps
 from diarize.diarization import diarize_audio
 from diarize.speakers import assign_speakers_to_words, detect_speaker_names, apply_speaker_names
-from diarize.export import export_to_txt
+from diarize.export import export_to_txt, export_emotions_to_txt
+from diarize.emotions import analyze_emotions, aggregate_emotions_by_speaker
+from diarize.visualize import plot_emotion_timeline
 from diarize.utils import log_vram_usage
 
 logger = logging.getLogger(__name__)
@@ -41,7 +43,11 @@ def process_single_file(media_file, output_file, args, device):
        *(skipped in ``--simple`` mode)*
     6. **Name detection** -- *(experimental, ``--experimental`` flag)*
        scans for self-introductions and replaces SPEAKER_N with real names.
-    7. **Export** -- writes the final ``.txt`` file.
+    7. **Emotion analysis** -- *(experimental, ``--emotions`` flag)*
+       runs dual-model emotion scoring (vocal tone + text content) on every
+       segment and aggregates per speaker.
+    8. **Export** -- writes the final ``.txt`` file (plus ``*_emotions.txt``
+       when emotions are enabled).
 
     Args:
         media_file (Path): Input media file path.
@@ -99,15 +105,34 @@ def process_single_file(media_file, output_file, args, device):
                 if name_map:
                     result = apply_speaker_names(result, name_map)
 
-        # -- Step 7: Export ------------------------------------------------
+        # -- Emotion analysis (optional) -----------------------------------
+        emotion_results = None
+        speaker_emotion_summary = None
+        if getattr(args, "emotions", False):
+            logger.info("\n" + "=" * 50)
+            logger.info("EMOTION ANALYSIS (EXPERIMENTAL)")
+            logger.info("=" * 50)
+            emotion_results = analyze_emotions(result, audio_path, device)
+            speaker_emotion_summary = aggregate_emotions_by_speaker(
+                emotion_results,
+            )
+
+        # -- Export --------------------------------------------------------
         logger.info("\n" + "=" * 50)
-        logger.info(
-            "STEP 6: EXPORTING RESULTS"
-            if not args.simple
-            else "STEP 3: EXPORTING RESULTS"
-        )
+        logger.info("EXPORTING RESULTS")
         logger.info("=" * 50)
         export_to_txt(result, output_file, simple=args.simple)
+
+        if emotion_results is not None:
+            emotion_file = output_file.rsplit(".", 1)[0] + "_emotions.txt"
+            export_emotions_to_txt(
+                emotion_results, speaker_emotion_summary, emotion_file,
+            )
+            logger.info(f"Emotion analysis exported to: {emotion_file}")
+
+            graph_file = output_file.rsplit(".", 1)[0] + "_emotions.png"
+            plot_emotion_timeline(emotion_results, graph_file)
+            logger.info(f"Emotion graph saved to: {graph_file}")
 
         logger.info(f"Completed: {output_file}")
 

@@ -1,0 +1,30 @@
+Mrs: Good afternoon. You must be Mr. Wang.
+SPEAKER_2: Yes, good afternoon.
+Mrs: Pleased to meet you. I'm Mrs. Clark, the bank manager. Please have a seat.
+SPEAKER_2: Thank you.
+Mrs: So tell me a little bit about yourself, Mr. Wang.
+SPEAKER_2: Well, I grew up in China and studied accounting. Then I worked at an accounting firm there for two years before coming to the States. I work well with others, and I like to challenge myself to constantly improve my skills.
+Mrs: That's great. As you know, this job is for a bank
+UNKNOWN: teller.
+Mrs: What would you say are some of your strengths or skills that might help you succeed in this job?
+SPEAKER_2: My biggest strength is my attention to detail. That has helped me a lot in this line of work. Also, I work well under pressure.
+Mrs: Wonderful. And what would you say are some of your weaknesses?
+SPEAKER_2: One of my biggest weaknesses is asking for help when I need it. I'd like to do better at that.
+Mrs: I appreciate your honesty, Mr. Wayne. What can you tell me about some of your goals over the next few years?
+SPEAKER_2: My primary goal is to gain more work experience, so a position like this would help me meet that goal. I'd also like to learn more about the different aspects of banking.
+Mrs: I think those goals are very smart. I also want to ask you what salary range you'd be most comfortable with.
+SPEAKER_2: I would be hoping to start somewhere between $35,000 and $38,000 a year, which is based on my experience and education.
+Mrs: Thank you. Those are all the questions I have for you today.
+UNKNOWN: Do
+Mrs: you have any questions for
+UNKNOWN: me?
+SPEAKER_2: Can you tell me about the working hours?
+Mrs: We'd like whoever fills the position to work nine to five each weekday. There may be some occasional overtime.
+SPEAKER_2: All right. Thank you. And when do you expect to be making your decision?
+Mrs: We'll give you a call within a week and let you know. Do you have any other questions?
+SPEAKER_2: Not at the moment. Thank you.
+Mrs: Well, if you think of any more, you're always welcome to call me.
+SPEAKER_2: Thank you so much.
+Mrs: It was great to meet you. Thanks for coming in today.
+SPEAKER_2: Thank you. It was a pleasure meeting you as well.
+UNKNOWN: you

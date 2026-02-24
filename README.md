@@ -16,11 +16,13 @@ A modular Python toolkit for extracting, transcribing, and speaker-diarizing aud
 8. [CLI Reference](#cli-reference)
 9. [Module Reference](#module-reference)
 10. [Experimental: Speaker Name Detection](#experimental-speaker-name-detection)
-11. [Output Formats](#output-formats)
-12. [Performance](#performance)
-13. [Troubleshooting](#troubleshooting)
-14. [Security](#security)
-15. [License and Attribution](#license-and-attribution)
+11. [Experimental: Emotion Analysis](#experimental-emotion-analysis)
+12. [Sample Output](#sample-output)
+13. [Output Formats](#output-formats)
+14. [Performance](#performance)
+15. [Troubleshooting](#troubleshooting)
+16. [Security](#security)
+17. [License and Attribution](#license-and-attribution)
 
 ---
 
@@ -36,6 +38,7 @@ A modular Python toolkit for extracting, transcribing, and speaker-diarizing aud
 - Simple mode (`--simple`): transcript split by natural speech pauses, no diarization.
 - Batch processing: point at a folder to process every media file inside it.
 - Experimental name detection (`--experimental`): scans the transcript for self-introductions (e.g. "I'm Benj", "my name is Sarah") and replaces generic `SPEAKER_N` labels with detected names.
+- Experimental emotion analysis (`--emotions`): dual-model speech emotion recognition -- analyses vocal tone (arousal / valence / dominance) and text content (7 categorical emotions) per segment, with per-speaker aggregation. Ideal for HCD interview analysis.
 - Backward-compatible: `python transcribe_and_diarize.py` still works (thin wrapper around `main.py`).
 
 ---
@@ -53,8 +56,15 @@ Diarization/
 │   ├── transcribe.py            # WhisperX transcription + alignment
 │   ├── diarization.py           # pyannote speaker diarization
 │   ├── speakers.py              # Speaker label assignment + name detection
-│   ├── export.py                # Text file export (diarized / simple)
+│   ├── emotions.py              # Speech emotion recognition (audio + text)
+│   ├── visualize.py             # Emotion timeline graphs (matplotlib PNG)
+│   ├── export.py                # Text file export (diarized / simple / emotions)
 │   └── pipeline.py              # Orchestrates single-file and folder workflows
+├── sample_interview.mp4         # CC-BY sample video for demo / testing
+├── sample_output/               # Pre-generated example outputs (committed)
+│   ├── sample_interview.txt             # Diarized transcript
+│   ├── sample_interview_emotions.txt    # Emotion-annotated transcript
+│   └── sample_interview_emotions.png    # Emotion timeline graph
 ├── requirements.txt             # Python dependencies with install instructions
 ├── .env                         # Hugging Face token (not committed)
 ├── .env.example                 # Template for .env
@@ -103,9 +113,18 @@ Input media file (video or audio)
 │  (speakers.py)    │  Replace SPEAKER_N → detected name
 └────────┬─────────┘
          ▼
+┌──────────────────┐  [ONLY with --emotions]
+│  7. emotions      │  Audio emotion model →               VRAM: ~1 GB
+│  (emotions.py)    │  arousal / dominance / valence
+│                   │  Text emotion model →                VRAM: ~0.5 GB
+│                   │  anger/disgust/fear/joy/neutral/
+│                   │  sadness/surprise
+└────────┬─────────┘  (models deleted, VRAM cleared)
+         ▼
 ┌──────────────────┐
-│  7. export        │  Write .txt file                     VRAM: ~0 GB
-│  (export.py)      │  (diarized lines or simple lines)
+│  8. export        │  Write .txt file                     VRAM: ~0 GB
+│  (export.py)      │  (+ *_emotions.txt when --emotions)
+│                   │  (+ *_emotions.png emotion graph)
 └────────┬─────────┘
          ▼
 Output .txt file
@@ -234,6 +253,17 @@ Speaker diarization requires a Hugging Face token with access to **gated models*
 
 Without accepting access, diarization will fail and the script will fall back to labelling all text as `SPEAKER_1`.
 
+### Emotion Models (no extra permissions needed)
+
+The `--emotions` feature uses two additional models that are **not gated** -- they download automatically on first run with no HuggingFace access approvals:
+
+| Model | License | Purpose |
+|-------|---------|--------|
+| [audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim](https://huggingface.co/audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim) | CC-BY-NC-SA-4.0 | Vocal tone → arousal / dominance / valence |
+| [j-hartmann/emotion-english-distilroberta-base](https://huggingface.co/j-hartmann/emotion-english-distilroberta-base) | Open | Text content → 7 categorical emotions |
+
+> **Note:** The audeering model is licensed CC-BY-NC-SA-4.0 (non-commercial). This is fine for educational and research use.
+
 ### Token Setup (pick one)
 
 **Option A -- .env file (recommended):**
@@ -280,6 +310,21 @@ Scans the transcript for self-introductions and replaces `SPEAKER_N` labels with
 
 ```bash
 python main.py video.mov --experimental
+```
+
+### Emotion Analysis
+
+Run dual-model emotion scoring on every transcript segment. Produces a separate `*_emotions.txt` file with per-segment and per-speaker emotion profiles.
+
+```bash
+# Emotion analysis (works with or without diarization)
+python main.py interview.wav --emotions
+
+# Combine with name detection for the full experience
+python main.py interview.wav --experimental --emotions
+
+# Even works in simple mode (no speaker labels, but emotions are still scored)
+python main.py interview.wav --simple --emotions
 ```
 
 ### Batch Processing (Folder)
@@ -331,7 +376,7 @@ python transcribe_and_diarize.py video.mov --experimental
 
 ```
 usage: main.py [-h] [--hf_token TOKEN] [--batch_size N] [--output FILE]
-               [--output_dir DIR] [--simple] [--experimental]
+               [--output_dir DIR] [--simple] [--experimental] [--emotions]
                media_file
 
 positional arguments:
@@ -354,6 +399,11 @@ options:
   --experimental        Experimental: detect speaker names from self-introductions
                         ("I'm John", "my name is Sarah") and replace SPEAKER_N
                         labels with detected names.
+  --emotions            Experimental: run dual-model speech emotion analysis on
+                        every segment. Outputs arousal/valence/dominance (vocal
+                        tone) and 7 categorical emotions (text content) in a
+                        separate *_emotions.txt file and *_emotions.png graph.
+                        Ideal for HCD interviews.
 ```
 
 ### Exit Codes
@@ -413,6 +463,22 @@ All modules live in the `diarize/` package and can be imported independently.
 | Function | Signature | Description |
 |----------|-----------|-------------|
 | `export_to_txt` | `(result, output_file, simple=False)` | Write `.txt` file. Diarized mode groups by speaker; simple mode splits by pauses. |
+| `export_emotions_to_txt` | `(emotion_results, speaker_summary, output_file)` | Write emotion-annotated `.txt` file with per-segment scores and per-speaker profiles. |
+
+### diarize/emotions.py
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `analyze_emotions` | `(result, audio_path, device) -> list[dict]` | Run dual-model (audio + text) emotion analysis on every segment. Loads/unloads models sequentially. |
+| `aggregate_emotions_by_speaker` | `(emotion_results) -> dict` | Average emotion scores per speaker across all their segments. |
+| `AUDIO_EMOTION_MODEL` | `str` | HuggingFace model ID for audio emotions: `audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim`. |
+| `TEXT_EMOTION_MODEL` | `str` | HuggingFace model ID for text emotions: `j-hartmann/emotion-english-distilroberta-base`. |
+
+### diarize/visualize.py
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `plot_emotion_timeline` | `(emotion_results, output_path)` | Render per-speaker emotion timeline subplots (voice + text) and save as PNG. |
 
 ### diarize/pipeline.py
 
@@ -468,6 +534,184 @@ Benj: And today we are going to be reality checking Assassin's Creed.
 
 ---
 
+## Experimental: Emotion Analysis
+
+When `--emotions` is passed, the pipeline runs **two complementary emotion models** on every transcript segment after diarization (or after alignment in `--simple` mode). Results are written to a separate `*_emotions.txt` file alongside the standard transcript.
+
+This feature is designed for **human-centered design (HCD) interview analysis**, where understanding participant emotions, frustrations, and moments of delight is critical.
+
+### Dual-Model Approach
+
+| Model | Type | What It Captures | Output |
+|-------|------|-----------------|--------|
+| `audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim` | Audio (vocal tone) | **How** something is said — pitch, rhythm, energy | arousal, dominance, valence (0→1 each) |
+| `j-hartmann/emotion-english-distilroberta-base` | Text (word content) | **What** is said — semantic emotion in the words | anger, disgust, fear, joy, neutral, sadness, surprise |
+
+**Why two models?** A participant might say "that's fine" (neutral text) while sounding frustrated (low valence, high arousal). Or they might describe a problem calmly (neutral voice) using strongly negative words. The dual approach catches both signals.
+
+### Audio Emotion Dimensions
+
+| Dimension | Low (→ 0) | High (→ 1) | HCD Insight |
+|-----------|-----------|-------------|-------------|
+| **Arousal** | Calm, drowsy, bored | Excited, agitated, energised | Spots moments of high engagement or frustration |
+| **Dominance** | Submissive, uncertain, helpless | Confident, in-control, assertive | Reveals whether users feel empowered or overwhelmed |
+| **Valence** | Negative, unpleasant, distressed | Positive, pleasant, happy | Core sentiment — pain points vs. delight moments |
+
+### Text Emotion Categories
+
+| Emotion | Typical HCD Signal |
+|---------|--------------------|
+| **anger** 🤬 | Frustration with a feature or process |
+| **disgust** 🤢 | Strong aversion to a design choice |
+| **fear** 😨 | Anxiety, uncertainty, or feeling lost |
+| **joy** 😀 | Delight, satisfaction, a feature that works well |
+| **neutral** 😐 | Factual description, no strong feeling |
+| **sadness** 😭 | Disappointment, unmet expectations |
+| **surprise** 😲 | Unexpected behaviour (positive or negative) |
+
+### Output Format
+
+The `*_emotions.txt` file contains a header, per-segment scores, and per-speaker profiles:
+
+```
+================================================================================
+EMOTION-ANNOTATED TRANSCRIPT
+================================================================================
+
+Models:
+  Audio: audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim
+    Arousal  (0-1): activation / excitement
+    Dominance(0-1): control / confidence
+    Valence  (0-1): positivity / pleasantness
+
+  Text:  j-hartmann/emotion-english-distilroberta-base
+    anger | disgust | fear | joy | neutral | sadness | surprise
+
+================================================================================
+
+[00:00.00 -> 00:03.50] SPEAKER_1:
+  Hello guys I'm Benj
+  Voice:  arousal=0.45  valence=0.72  dominance=0.65
+  Text:   joy=0.52  neutral=0.38  surprise=0.05
+
+[00:03.80 -> 00:07.20] SPEAKER_2:
+  I really struggled with the checkout flow
+  Voice:  arousal=0.71  valence=0.22  dominance=0.31
+  Text:   sadness=0.48  anger=0.25  neutral=0.15
+
+================================================================================
+SPEAKER EMOTION PROFILES (averaged across all segments)
+================================================================================
+
+SPEAKER_1 (45 segments):
+  Voice avg:  arousal=0.48  valence=0.65  dominance=0.58
+  Text avg:   neutral=0.41  joy=0.32  sadness=0.08  anger=0.06  ...
+  Dominant:   neutral (0.41)
+
+SPEAKER_2 (38 segments):
+  Voice avg:  arousal=0.55  valence=0.49  dominance=0.47
+  Text avg:   neutral=0.35  sadness=0.22  anger=0.18  joy=0.12  ...
+  Dominant:   neutral (0.35)
+```
+
+### VRAM Usage
+
+Emotion models are loaded **sequentially** (audio first, then text), following the same pattern as the rest of the pipeline:
+
+| Phase | Model | VRAM |
+|-------|-------|------|
+| Audio emotions | wav2vec2-large-robust-12-ft (0.2B params) | ~1 GB |
+| Text emotions | distilroberta-base | ~0.5 GB |
+
+Peak VRAM during emotion analysis is ~1 GB (audio model). Both models are deleted and VRAM is cleared before the next phase.
+
+### Combining with Other Flags
+
+```bash
+# Emotions only (standard SPEAKER_N labels)
+python main.py interview.wav --emotions
+
+# Emotions + name detection (detected names in emotion output)
+python main.py interview.wav --experimental --emotions
+
+# Emotions in simple mode (no speaker labels, segments still scored)
+python main.py interview.wav --simple --emotions
+
+# Batch processing with emotions
+python main.py /path/to/interviews/ --output_dir results --emotions
+```
+
+---
+
+## Sample Output
+
+The repository includes a ready-made example generated from an open-source
+[Creative Commons Attribution](https://creativecommons.org/licenses/by/3.0/)
+video of a job-interview roleplay (two speakers, ~2 min).
+
+**Command used:**
+
+```bash
+python main.py sample_interview.mp4 --output_dir sample_output --experimental --emotions
+```
+
+### Transcript (`sample_output/sample_interview.txt`)
+
+Name detection identified *Mrs* from the phrase "I'm Mrs. Clark, the bank
+manager". The second speaker had no detectable name and keeps the default label.
+
+```
+Mrs: Good afternoon. You must be Mr. Wang.
+SPEAKER_2: Yes, good afternoon.
+Mrs: Pleased to meet you. I'm Mrs. Clark, the bank manager. Please have a seat.
+SPEAKER_2: Thank you.
+Mrs: So tell me a little bit about yourself, Mr. Wang.
+SPEAKER_2: Well, I grew up in China and studied accounting. Then I worked at an
+accounting firm there for two years before coming to the States. I work well
+with others, and I like to challenge myself to constantly improve my skills.
+...
+```
+
+### Emotion-annotated transcript (`sample_output/sample_interview_emotions.txt`)
+
+Each segment shows voice dimensions (arousal / valence / dominance, 0–1) and the
+top-3 text emotion probabilities:
+
+```
+[00:03.27 -> 00:03.85] Mrs:
+  Good afternoon.
+  Voice:  arousal=0.74  valence=0.84  dominance=0.71
+  Text:   neutral=0.69  joy=0.27  sadness=0.01
+
+[00:05.33 -> 00:06.13] SPEAKER_2:
+  Yes, good afternoon.
+  Voice:  arousal=0.66  valence=0.86  dominance=0.71
+  Text:   joy=0.68  neutral=0.29  sadness=0.02
+```
+
+Speaker emotion profiles are appended at the end of the file:
+
+```
+Mrs (25 segments):
+  Voice avg:  arousal=0.53  valence=0.63  dominance=0.60
+  Text avg:   neutral=0.68  joy=0.21  surprise=0.06  sadness=0.02  ...
+  Dominant:   neutral (0.68)
+
+SPEAKER_2 (22 segments):
+  Voice avg:  arousal=0.43  valence=0.66  dominance=0.52
+  Text avg:   neutral=0.49  joy=0.33  sadness=0.05  surprise=0.04  ...
+  Dominant:   neutral (0.49)
+```
+
+### Emotion timeline graph (`sample_output/sample_interview_emotions.png`)
+
+One subplot row per emotion model per speaker — voice dimensions on top, text
+categories below. X-axis is the timestamp, Y-axis is magnitude (0–1).
+
+![Emotion Timeline](sample_output/sample_interview_emotions.png)
+
+---
+
 ## Output Formats
 
 ### Diarized Mode (default)
@@ -498,6 +742,10 @@ Same as diarized mode but with detected names:
 Benj: Welcome to the meeting. Today we'll discuss the quarterly results.
 Toby: Thank you. Let's start with the financial overview.
 ```
+
+### Emotion Mode (`--emotions`)
+
+Produces a separate `*_emotions.txt` file alongside the standard transcript, plus a `*_emotions.png` emotion timeline graph. See [Experimental: Emotion Analysis](#experimental-emotion-analysis) for the full output format and [Sample Output](#sample-output) for real examples.
 
 ---
 
@@ -545,6 +793,9 @@ Every pipeline stage logs a `[VRAM]` snapshot so you can monitor usage:
 | Diarization | `diarization.py` | ~6-8 GB |
 | Speaker assignment | `speakers.py` | ~0 GB |
 | Name detection | `speakers.py` | ~0 GB |
+| Emotion analysis (audio) | `emotions.py` | ~1 GB |
+| Emotion analysis (text) | `emotions.py` | ~0.5 GB |
+| Graph generation | `visualize.py` | ~0 GB (CPU / matplotlib) |
 | Export | `export.py` | ~0 GB |
 
 Peak VRAM never exceeds ~12 GB because models are loaded sequentially.
@@ -657,3 +908,5 @@ During `pip install`, you may see messages like "whisperx requires torch>=2.8.0 
 - [Whisper](https://github.com/openai/whisper) by OpenAI
 - [pyannote.audio](https://github.com/pyannote/pyannote-audio) by Herve Bredin
 - [PyTorch](https://pytorch.org/)
+- [wav2vec2-large-robust-12-ft-emotion-msp-dim](https://huggingface.co/audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim) by audEERING (CC-BY-NC-SA-4.0)
+- [emotion-english-distilroberta-base](https://huggingface.co/j-hartmann/emotion-english-distilroberta-base) by Jochen Hartmann
