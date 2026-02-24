@@ -562,10 +562,12 @@ With `--batch_size 0` (auto), these are the approximate batch sizes calculated a
 
 ### Timing
 
-On an RTX 3090 Ti with batch size 16:
-- Transcription: ~2-3x realtime (a 10-min video transcribes in ~4 min).
-- Diarization: ~1.5x realtime (varies by speaker count and overlap).
-- Total: roughly 0.5-1x the video duration for the full pipeline.
+On an RTX 3090 Ti with auto batch size and `onnxruntime-gpu`:
+- Transcription: ~2-3x realtime (a 10-min video transcribes in ~3-4 min).
+- Diarization: ~4-10x realtime on GPU (a 10-min video diarizes in ~1-2.5 min).
+- Total: roughly 0.3-0.7x the video duration for the full pipeline.
+
+**Important:** Without `onnxruntime-gpu`, diarization silently falls back to CPU and runs ~5-10x slower. See [Troubleshooting](#diarization-running-on-cpu-slow).
 
 ---
 
@@ -594,6 +596,29 @@ Possible causes:
 1. **Gated model access not accepted.** Visit the model pages listed in [Configuration](#configuration) and click "Agree and access repository".
 2. **Invalid or expired HF token.** Verify: `echo $HF_TOKEN` or check `.env`.
 3. **pyannote version mismatch.** The script handles both 3.x and 4.x, but if you have an unusual version, check that `diarize_audio()` correctly unwraps `DiarizeOutput`.
+
+### Diarization running on CPU (slow)
+
+If you see this warning in the logs:
+```
+Specified provider 'CUDAExecutionProvider' is not in available provider names.
+Available providers: 'AzureExecutionProvider, CPUExecutionProvider'
+```
+
+The pyannote diarization pipeline is running on **CPU instead of GPU**. This happens when `onnxruntime` (CPU-only) is installed instead of `onnxruntime-gpu`. Fix:
+
+```bash
+pip uninstall -y onnxruntime
+pip install onnxruntime-gpu
+```
+
+Verify:
+```bash
+python -c "import onnxruntime; print(onnxruntime.get_available_providers())"
+# Should include 'CUDAExecutionProvider'
+```
+
+This is the single biggest performance difference for diarization -- expect a 5-10x speedup.
 
 ### torchcodec warnings
 
