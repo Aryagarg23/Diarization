@@ -73,14 +73,27 @@ def extract_audio(media_file, output_audio_path, sr=16000):
 
 
 def clear_vram():
-    """Clear GPU VRAM."""
+    """
+    Clear GPU VRAM using garbage collection and PyTorch cache clearing.
+    
+    This function helps manage VRAM by:
+    - Running Python garbage collection
+    - Clearing PyTorch's CUDA cache
+    """
     gc.collect()
     torch.cuda.empty_cache()
     logger.debug("VRAM cleared")
 
 
 def get_device():
-    """Determine the device to use (CUDA if available, else CPU)."""
+    """
+    Determine the device to use for computation.
+    
+    Returns:
+        str: 'cuda' if NVIDIA GPU is available, otherwise 'cpu'
+    
+    Logs GPU information including device name and available VRAM.
+    """
     if torch.cuda.is_available():
         logger.info(f"Using GPU: {torch.cuda.get_device_name(0)}")
         logger.info(f"Available GPU VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
@@ -102,6 +115,10 @@ def transcribe_audio(audio_path, device, batch_size=16, compute_type="float16"):
     
     Returns:
         dict: Transcribed result with word-level timestamps
+    
+    Note:
+        Model is automatically deleted after transcription to manage VRAM.
+        VRAM is cleared using gc.collect() and torch.cuda.empty_cache().
     """
     logger.info("Loading WhisperX model (large-v2)...")
     
@@ -143,6 +160,10 @@ def align_timestamps(audio_path, result, device):
     
     Returns:
         dict: Result with aligned timestamps
+    
+    Note:
+        Alignment model is language-specific and automatically selected.
+        Model is deleted after alignment to manage VRAM.
     """
     logger.info("Loading alignment model...")
     
@@ -177,11 +198,15 @@ def diarize_audio(audio_path, hf_token, device):
     
     Args:
         audio_path (str): Path to the audio file
-        hf_token (str): Hugging Face API token
+        hf_token (str): Hugging Face API token (required)
         device (str): Device to use ('cuda' or 'cpu')
     
     Returns:
-        dict: Diarization result with speaker labels
+        dict: Diarization result with speaker labels, or None if token not provided
+    
+    Note:
+        Requires Hugging Face token with access to pyannote models.
+        Pipeline is deleted after diarization to manage VRAM.
     """
     if not hf_token:
         logger.warning("Hugging Face token not provided. Skipping diarization.")
@@ -223,11 +248,15 @@ def assign_speakers_to_words(result, diarization):
     Assign speaker labels to transcribed words based on diarization results.
     
     Args:
-        result (dict): Aligned transcription result
-        diarization: Diarization result from pyannote
+        result (dict): Aligned transcription result with word-level timestamps
+        diarization: Diarization result from pyannote, or None
     
     Returns:
         dict: Result with speaker labels assigned to words
+    
+    Note:
+        If diarization is None, all words are assigned to SPEAKER_1.
+        Speaker assignment is based on word midpoint timestamp.
     """
     if diarization is None:
         logger.warning("No diarization data available. Assigning all text to SPEAKER_1")
@@ -274,8 +303,14 @@ def export_to_txt(result, output_file):
     Export transcription with speaker labels to a text file.
     
     Args:
-        result (dict): Final aligned and diarized result
+        result (dict): Final aligned and diarized result with speaker labels
         output_file (str): Path to save the output text file
+    
+    Output format:
+        SPEAKER_ID: Transcribed text
+        
+    Note:
+        Consecutive words from the same speaker are combined into single lines.
     """
     logger.info(f"Exporting results to {output_file}...")
     
@@ -312,7 +347,20 @@ def export_to_txt(result, output_file):
 
 
 def main():
-    """Main function to orchestrate the transcription and diarization workflow."""
+    """
+    Main function to orchestrate the transcription and diarization workflow.
+    
+    Workflow:
+        1. Extract audio from media file
+        2. Transcribe audio with WhisperX
+        3. Align word-level timestamps
+        4. Perform speaker diarization
+        5. Assign speakers to words
+        6. Export results to text file
+    
+    Each model is loaded, used, deleted, and VRAM is cleared sequentially
+    to maintain memory usage under 16GB.
+    """
     parser = argparse.ArgumentParser(
         description="WhisperX Audio Transcription and Speaker Diarization",
         formatter_class=argparse.RawDescriptionHelpFormatter,
