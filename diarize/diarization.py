@@ -16,7 +16,7 @@ import torch
 import torchaudio
 from pyannote.audio import Pipeline
 
-from diarize.utils import clear_vram
+from diarize.utils import clear_vram, log_vram_usage
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,7 @@ def diarize_audio(audio_path, hf_token, device):
         )
         pipeline = pipeline.to(torch.device(device))
         logger.info("Pipeline loaded.")
+        log_vram_usage("After diarization pipeline load")
 
         # Load audio via torchaudio (avoids torchcodec incompatibility)
         logger.info("Loading audio file...")
@@ -115,6 +116,7 @@ def diarize_audio(audio_path, hf_token, device):
             f"  Speakers detected: {num_speakers} | "
             f"Labels: {list(diarization.labels())}"
         )
+        log_vram_usage("After diarization")
 
     except Exception as e:
         logger.error(f"Error during diarization: {type(e).__name__}: {e}")
@@ -127,5 +129,6 @@ def diarize_audio(audio_path, hf_token, device):
         if "pipeline" in locals():
             del pipeline
         clear_vram()
+        log_vram_usage("After diarization cleanup")
 
     return diarization

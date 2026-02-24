@@ -11,7 +11,15 @@ Modules:
     pipeline    - Orchestrates the full processing workflow
 """
 
-from diarize.utils import clear_vram, get_device, setup_logging
+from diarize.utils import (
+    clear_vram,
+    get_device,
+    setup_logging,
+    get_total_vram,
+    get_free_vram,
+    log_vram_usage,
+    optimal_batch_size,
+)
 from diarize.audio import extract_audio
 from diarize.transcribe import transcribe_audio, align_timestamps
 from diarize.diarization import diarize_audio
@@ -23,6 +31,10 @@ __all__ = [
     "clear_vram",
     "get_device",
     "setup_logging",
+    "get_total_vram",
+    "get_free_vram",
+    "log_vram_usage",
+    "optimal_batch_size",
     "extract_audio",
     "transcribe_audio",
     "align_timestamps",

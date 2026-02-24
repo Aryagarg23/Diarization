@@ -15,6 +15,7 @@ from diarize.transcribe import transcribe_audio, align_timestamps
 from diarize.diarization import diarize_audio
 from diarize.speakers import assign_speakers_to_words, detect_speaker_names, apply_speaker_names
 from diarize.export import export_to_txt
+from diarize.utils import log_vram_usage
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ def process_single_file(media_file, output_file, args, device):
         device (str): ``'cuda'`` or ``'cpu'``.
     """
     logger.info(f"\nProcessing: {media_file.name}")
+    log_vram_usage("Pipeline start (before any models)")
 
     temp_audio = f"temp_audio_{media_file.stem}.wav"
 

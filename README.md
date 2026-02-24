@@ -31,6 +31,8 @@ A modular Python toolkit for extracting, transcribing, and speaker-diarizing aud
 - Word-level timestamp alignment.
 - Speaker diarization with pyannote.audio 3.0 pipeline.
 - Sequential model loading: each model is loaded, used, deleted, and VRAM is cleared before the next model loads.
+- Dynamic VRAM-aware batch sizing: automatically probes free GPU memory after model load and uses the largest safe batch size (`--batch_size 0`, the default).
+- VRAM telemetry: logs used/free/total VRAM at every pipeline stage for full visibility.
 - Simple mode (`--simple`): transcript split by natural speech pauses, no diarization.
 - Batch processing: point at a folder to process every media file inside it.
 - Experimental name detection (`--experimental`): scans the transcript for self-introductions (e.g. "I'm Benj", "my name is Sarah") and replaces generic `SPEAKER_N` labels with detected names.
@@ -78,7 +80,7 @@ Input media file (video or audio)
          ▼
 ┌──────────────────┐
 │  2. transcribe    │  WhisperX large-v2 → segments       VRAM: ~10-12 GB
-│  (transcribe.py)  │  with word-level timestamps
+│  (transcribe.py)  │  auto batch size from free VRAM
 └────────┬─────────┘
          ▼  (model deleted, VRAM cleared)
 ┌──────────────────┐
@@ -302,11 +304,16 @@ python main.py video.mov --output_dir ./my_transcripts
 
 ### Performance Tuning
 
+By default, the batch size is calculated automatically from free VRAM after the model loads. You can override it:
+
 ```bash
-# Increase batch size for faster transcription (needs more VRAM)
+# Auto batch size (default -- uses all available VRAM)
+python main.py video.mov
+
+# Force a specific batch size (e.g. for benchmarking or low-VRAM GPUs)
 python main.py video.mov --batch_size 32
 
-# Lower batch size if running out of VRAM
+# Low VRAM fallback
 python main.py video.mov --batch_size 8
 ```
 
@@ -334,8 +341,10 @@ options:
   -h, --help            Show help and exit.
   --hf_token TOKEN      Hugging Face API token. Falls back to HF_TOKEN env var
                         or .env file.
-  --batch_size N        WhisperX transcription batch size (default: 16).
-                        Higher = faster but uses more VRAM.
+  --batch_size N        WhisperX transcription batch size.
+                        0 = auto (probe free VRAM after model load and use as
+                        much as possible). Any positive value is used as-is.
+                        Default: 0 (auto).
   --output FILE         Output text file path (single file only).
                         Default: <input_name>.txt alongside the input.
   --output_dir DIR      Output directory. Created if it does not exist.
@@ -367,6 +376,10 @@ All modules live in the `diarize/` package and can be imported independently.
 | `setup_logging` | `(level=logging.INFO)` | Configure root logger with timestamp format. |
 | `clear_vram` | `()` | Run `gc.collect()` + `torch.cuda.empty_cache()`. |
 | `get_device` | `() -> str` | Return `"cuda"` or `"cpu"`. Logs GPU info. |
+| `get_total_vram` | `() -> float` | Return total GPU VRAM in GB (0.0 on CPU). |
+| `get_free_vram` | `() -> float` | Return current free GPU VRAM in GB after cache flush. |
+| `log_vram_usage` | `(label="")` | Log one-line snapshot: used / free / total GB. |
+| `optimal_batch_size` | `(per_item_mb=320, safety_mb=1200) -> int` | Calculate largest safe batch size from current free VRAM. Clamped to [4, 128]. |
 
 ### diarize/audio.py
 
@@ -378,7 +391,7 @@ All modules live in the `diarize/` package and can be imported independently.
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
-| `transcribe_audio` | `(audio_path, device, batch_size=16, compute_type="float16") -> dict` | Load WhisperX large-v2, transcribe, delete model, clear VRAM. Returns result dict. |
+| `transcribe_audio` | `(audio_path, device, batch_size=0, compute_type="float16") -> dict` | Load WhisperX large-v2, auto-calculate batch size from free VRAM (if 0), transcribe, delete model, clear VRAM. Returns result dict. |
 | `align_timestamps` | `(audio_path, result, device) -> dict` | Load alignment model, refine word timestamps, delete model, clear VRAM. Returns updated result. |
 
 ### diarize/diarization.py
@@ -490,12 +503,44 @@ Toby: Thank you. Let's start with the financial overview.
 
 ## Performance
 
+### Dynamic VRAM-Aware Batch Sizing
+
+By default (`--batch_size 0`), the transcription step **automatically maximises GPU utilisation**:
+
+1. The WhisperX large-v2 model is loaded onto the GPU (~10 GB).
+2. `optimal_batch_size()` probes free VRAM via `torch.cuda.mem_get_info()`.
+3. It subtracts a 1.2 GB safety margin, divides by ~320 MB per batch item, and clamps to [4, 128].
+4. The calculated batch size is logged and used for transcription.
+
+Example on an RTX 3090 Ti (24 GB total):
+```
+[VRAM] After WhisperX model load: 10.24 GB used / 13.76 GB free / 24.00 GB total
+[Auto batch] Free VRAM: 13.76 GB | Usable: 12889 MB | Per-item est: 320 MB | Optimal batch size: 40
+```
+
+The same GPU at idle (before model load) would calculate batch 69, but since the probe happens **after** the model is already in VRAM, the calculation is accurate.
+
+### VRAM Telemetry
+
+Every pipeline stage logs a `[VRAM]` snapshot so you can monitor usage:
+
+```
+[VRAM] Pipeline start (before any models): 1.33 GB used / 22.81 GB free / 24.15 GB total
+[VRAM] After WhisperX model load: 10.24 GB used / 13.76 GB free / 24.15 GB total
+[VRAM] After transcription: 10.50 GB used / 13.50 GB free / 24.15 GB total
+[VRAM] After WhisperX cleanup: 1.35 GB used / 22.79 GB free / 24.15 GB total
+[VRAM] After alignment model load: 2.10 GB used / 22.04 GB free / 24.15 GB total
+[VRAM] After alignment cleanup: 1.35 GB used / 22.79 GB free / 24.15 GB total
+[VRAM] After diarization pipeline load: 6.80 GB used / 17.34 GB free / 24.15 GB total
+[VRAM] After diarization cleanup: 1.35 GB used / 22.79 GB free / 24.15 GB total
+```
+
 ### VRAM Usage by Stage
 
 | Stage | Module | Peak VRAM |
-|-------|--------|-----------|
+|-------|--------|----------|
 | Audio extraction | `audio.py` | 0 GB (CPU / FFmpeg) |
-| Transcription | `transcribe.py` | ~10-12 GB |
+| Transcription | `transcribe.py` | ~10-12 GB (model) + batch overhead |
 | Alignment | `transcribe.py` | ~3-4 GB |
 | Diarization | `diarization.py` | ~6-8 GB |
 | Speaker assignment | `speakers.py` | ~0 GB |
@@ -504,14 +549,16 @@ Toby: Thank you. Let's start with the financial overview.
 
 Peak VRAM never exceeds ~12 GB because models are loaded sequentially.
 
-### Batch Size Recommendations
+### Batch Size Reference
 
-| GPU | VRAM | Recommended `--batch_size` |
-|-----|------|---------------------------|
-| RTX 4060 Ti | 16 GB | 12-16 |
-| RTX 3090 Ti | 24 GB | 16-32 |
-| RTX 4090 | 24 GB | 32-48 |
-| A100 | 80 GB | 64+ |
+With `--batch_size 0` (auto), these are the approximate batch sizes calculated after model load:
+
+| GPU | VRAM | Auto batch (approx.) | Manual override suggestion |
+|-----|------|---------------------|---------------------------|
+| RTX 4060 Ti | 16 GB | ~12-15 | 8-16 |
+| RTX 3090 Ti | 24 GB | ~35-42 | 16-32 |
+| RTX 4090 | 24 GB | ~35-42 | 32-48 |
+| A100 | 80 GB | ~128 (capped) | 64-128 |
 
 ### Timing
 

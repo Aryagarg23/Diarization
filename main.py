@@ -70,8 +70,12 @@ Examples:
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=16,
-        help="Batch size for WhisperX transcription (default: 16).",
+        default=0,
+        help=(
+            "Batch size for WhisperX transcription. "
+            "0 = auto (probe free VRAM after model load and use as much as possible). "
+            "Any positive value is used as-is. Default: 0 (auto)."
+        ),
     )
     parser.add_argument(
         "--output",
